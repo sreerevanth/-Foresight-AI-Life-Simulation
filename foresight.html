@@ -453,9 +453,101 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--c-surface3);border-radius:2px}
+
+/* ─── API KEY GATE ───────────────────────────────────────── */
+#api-gate{
+  position:fixed;inset:0;z-index:300;
+  background:var(--c-bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+}
+.gate-card{
+  width:100%;max-width:420px;
+  background:var(--c-surface);border:1px solid var(--c-border-2);
+  border-radius:var(--r-lg);padding:32px 28px;
+  display:flex;flex-direction:column;gap:20px;
+}
+.gate-logo{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.gate-logo-mark{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--c-primary),var(--c-secondary));
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 16px var(--c-primary-glow);
+}
+.gate-logo-name{font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-.5px}
+.gate-title{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.5px;line-height:1.25}
+.gate-sub{font-size:13px;color:var(--c-text-2);line-height:1.6;margin-top:-10px}
+.gate-steps{display:flex;flex-direction:column;gap:8px}
+.gate-step{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--c-text-2)}
+.gate-step-num{
+  width:20px;height:20px;border-radius:50%;background:var(--c-primary-dim);
+  border:1px solid rgba(124,110,250,.3);color:var(--c-primary);
+  font-size:11px;font-weight:700;font-family:var(--font-display);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.gate-link{color:var(--c-primary);text-decoration:none;font-weight:500}
+.gate-link:hover{text-decoration:underline}
+.key-input-wrap{position:relative}
+.key-input-wrap .input{padding-right:48px;font-family:monospace;font-size:13px;letter-spacing:.3px}
+.key-toggle{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--c-text-3);font-size:14px;padding:4px;
+}
+.key-toggle:hover{color:var(--c-text-2)}
+.gate-note{font-size:11px;color:var(--c-text-3);display:flex;align-items:center;gap:5px}
+.gate-note span.dot{width:4px;height:4px;border-radius:50%;background:var(--c-secondary);flex-shrink:0}
 </style>
 </head>
 <body>
+
+<!-- ─── API KEY GATE ─────────────────────────── -->
+<div id="api-gate">
+  <div class="gate-card">
+    <div class="gate-logo">
+      <div class="gate-logo-mark">◎</div>
+      <div class="gate-logo-name">Foresight</div>
+    </div>
+
+    <div>
+      <div class="gate-title">Enter your OpenRouter API key to begin</div>
+      <p class="gate-sub" style="margin-top:8px">Free to get. Your key stays in your browser only — never sent anywhere except OpenRouter.</p>
+    </div>
+
+    <div class="gate-steps">
+      <div class="gate-step">
+        <div class="gate-step-num">1</div>
+        <span>Go to <a href="https://openrouter.ai/keys" target="_blank" class="gate-link">openrouter.ai/keys</a> and create a free account</span>
+      </div>
+      <div class="gate-step">
+        <div class="gate-step-num">2</div>
+        <span>Click <strong style="color:var(--c-text)">"Create Key"</strong> — free credits included, no card needed</span>
+      </div>
+      <div class="gate-step">
+        <div class="gate-step-num">3</div>
+        <span>Paste your key below and start simulating</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label">Your OpenRouter API Key</label>
+      <div class="key-input-wrap">
+        <input class="input" id="api-key-input" type="password" placeholder="sk-or-v1-..." autocomplete="off" spellcheck="false">
+        <button class="key-toggle" onclick="toggleKeyVis()" id="key-toggle-btn" title="Show/hide key">👁</button>
+      </div>
+    </div>
+
+    <div>
+      <button class="btn btn-cta" onclick="saveApiKey()" style="min-height:52px;font-size:15px">
+        <span class="cta-text">Start Foresight →</span>
+        <span class="cta-loader"><span class="ldots"><span></span><span></span><span></span></span></span>
+      </button>
+      <div class="gate-note" style="margin-top:10px;justify-content:center">
+        <span class="dot"></span>
+        Key stored in sessionStorage only · Cleared when you close the tab
+      </div>
+    </div>
+  </div>
+</div>
 
 <nav class="topnav">
   <div class="nav-logo">
@@ -684,6 +776,40 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
 <div class="toast" id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
 
 <script>
+/* ── API KEY ── */
+function getApiKey(){return sessionStorage.getItem('or_key')||''}
+
+function saveApiKey(){
+  const key=document.getElementById('api-key-input').value.trim();
+  if(!key||!key.startsWith('sk-or-')){
+    document.getElementById('api-key-input').classList.add('err');
+    showToast('Paste a valid OpenRouter key (starts with sk-or-)','error');
+    return;
+  }
+  sessionStorage.setItem('or_key',key);
+  const gate=document.getElementById('api-gate');
+  gate.style.opacity=0;gate.style.transition='opacity .3s';
+  setTimeout(()=>gate.style.display='none',300);
+}
+
+function toggleKeyVis(){
+  const inp=document.getElementById('api-key-input');
+  const btn=document.getElementById('key-toggle-btn');
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈'}
+  else{inp.type='password';btn.textContent='👁'}
+}
+
+// Allow Enter key on API key input
+document.addEventListener('DOMContentLoaded',()=>{
+  const ki=document.getElementById('api-key-input');
+  if(ki) ki.addEventListener('keydown',e=>{if(e.key==='Enter')saveApiKey()});
+  // If key already in session (page refresh), skip gate
+  if(getApiKey()){
+    const gate=document.getElementById('api-gate');
+    if(gate) gate.style.display='none';
+  }
+});
+
 /* ── STATE ── */
 let step = 0;
 let simData = null;
@@ -918,18 +1044,25 @@ Decision: ${p.decision}
 Generate realistic, specific, highly personalized simulations with concrete income figures and titles relevant to ${p.location}. Add personality and honest challenge to the narrative.`;
 
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+getApiKey(),
+        'HTTP-Referer':'https://foresight.app',
+        'X-Title':'Foresight'
+      },
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
+        model:'google/gemma-3-27b-it',
         max_tokens:3500,
-        system:SYS,
-        messages:[{role:'user',content:USR}]
+        messages:[
+          {role:'system',content:SYS},
+          {role:'user',content:USR}
+        ]
       })
     });
     const d=await res.json();
-    let raw=(d.content?.[0]?.text||'').replace(/```json|```/g,'').trim();
+    let raw=(d.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
     simData=JSON.parse(raw);
     simData._p=p;
     clearInterval(loadMsgTimer);
@@ -1176,15 +1309,21 @@ async function openScenario(q) {
   document.getElementById('modal').classList.add('open');
   const p=simData._p;
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+getApiKey(),
+        'HTTP-Referer':'https://foresight.app',
+        'X-Title':'Foresight'
+      },
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',max_tokens:700,
+        model:'google/gemma-3-27b-it',max_tokens:700,
         messages:[{role:'user',content:`You are Foresight AI. User: ${p.age}yr ${p.role} in ${p.location}, ${p.income}. Paths: ${simData.futures.map(f=>f.name+' '+f.probability+'%').join(', ')}. Scenario: "${q}". Give an honest, specific, personality-forward analysis in 3-4 paragraphs. No bullet points. Use phrases like "This path is risky, but powerful" or "Interesting — this changes things." Be a real advisor, not just information.`}]
       })
     });
     const data=await res.json();
-    const txt=data.content?.[0]?.text||'No response.';
+    const txt=data.choices?.[0]?.message?.content||'No response.';
     document.getElementById('modal-body').innerHTML=txt.split('\n\n').filter(Boolean)
       .map(t=>`<p style="font-size:13px;color:var(--c-text-2);line-height:1.7;margin-bottom:14px">${t}</p>`).join('');
   } catch(e) {
@@ -1220,12 +1359,21 @@ async function sendChat() {
   const p=simData._p;
   const SYS=`Foresight AI. User: ${p.age}yr ${p.role} in ${p.location}. Paths: ${simData.futures.map(f=>f.name+' ('+f.probability+'%)').join('; ')}. Insight: ${simData.insight}. Be concise (2-3 sentences), specific, a little provocative — like a great advisor. Say things like "Honestly, the real issue is..." or "This path is risky, but..." Don't just summarize. Challenge and guide.`;
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:350,system:SYS,messages:chatHistory})
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+getApiKey(),
+        'HTTP-Referer':'https://foresight.app',
+        'X-Title':'Foresight'
+      },
+      body:JSON.stringify({
+        model:'google/gemma-3-27b-it',max_tokens:350,
+        messages:[{role:'system',content:SYS},...chatHistory]
+      })
     });
     const data=await res.json();
-    const reply=data.content?.[0]?.text||'No response.';
+    const reply=data.choices?.[0]?.message?.content||'No response.';
     chatHistory.push({role:'assistant',content:reply});
     document.getElementById(lid).querySelector('.chat-bubble').textContent=reply;
   } catch(e) {
