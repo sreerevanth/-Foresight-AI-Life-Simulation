@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Foresight — Where is your life going?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+/* ─── DESIGN TOKENS ──────────────────────────────────────── */
+:root {
+  --c-primary:       #7C6EFA;
+  --c-primary-dim:   rgba(124,110,250,0.12);
+  --c-primary-glow:  rgba(124,110,250,0.35);
+  --c-secondary:     #2DE8C8;
+  --c-gold:          #F0B429;
+  --c-coral:         #FF6B6B;
+  --c-bg:            #0D0D14;
+  --c-surface:       #161620;
+  --c-surface2:      #1E1E2C;
+  --c-surface3:      #262638;
+  --c-border:        rgba(255,255,255,0.06);
+  --c-border-2:      rgba(255,255,255,0.11);
+  --c-text:          #EEEEF8;
+  --c-text-2:        #9898BC;
+  --c-text-3:        #55556A;
+
+  --sp-1:4px;--sp-2:8px;--sp-3:16px;--sp-4:24px;--sp-5:32px;--sp-6:48px;
+  --r:10px;--r-sm:6px;--r-lg:18px;--r-pill:100px;
+  --ease:cubic-bezier(.22,.68,0,1.2);--ease-out:cubic-bezier(.25,.46,.45,.94);
+  --dur:180ms;--dur-slow:320ms;
+
+  --font-display:'Syne',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  background:var(--c-bg);color:var(--c-text);
+  font-family:var(--font-body);font-size:15px;line-height:1.6;
+  min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+
+/* Grain overlay */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:200;
+  opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat:repeat;background-size:200px;
+}
+
+/* ─── SHELL ───────────────────────────────────────────────── */
+.shell{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-bottom:120px;position:relative}
+
+/* ─── TOP NAV ─────────────────────────────────────────────── */
+.topnav{
+  display:flex;align-items:center;padding:14px 20px;
+  position:sticky;top:0;z-index:50;
+  background:rgba(13,13,20,.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--c-border);
+}
+.nav-logo{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:-.3px}
+.logo-mark{
+  width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,var(--c-primary),var(--c-secondary));
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  box-shadow:0 0 12px var(--c-primary-glow);
+}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.btn-back{
+  display:flex;align-items:center;gap:4px;padding:6px 12px;
+  border-radius:var(--r-pill);border:1px solid var(--c-border-2);background:var(--c-surface);
+  color:var(--c-text-2);font-size:13px;font-family:var(--font-body);cursor:pointer;
+  transition:all var(--dur) var(--ease-out);
+}
+.btn-back:hover{color:var(--c-text);background:var(--c-surface2)}
+.btn-back.hidden{opacity:0;pointer-events:none}
+.step-pill{
+  padding:4px 12px;border-radius:var(--r-pill);
+  background:var(--c-surface);border:1px solid var(--c-border);
+  font-size:12px;color:var(--c-text-3);font-weight:500;font-family:var(--font-display);letter-spacing:.3px;
+}
+
+/* ─── PROGRESS ───────────────────────────────────────────── */
+.progress-wrap{height:2px;background:var(--c-surface2);overflow:visible;position:relative}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--c-primary),var(--c-secondary));
+  transition:width .5s var(--ease);position:relative;
+}
+.progress-fill::after{
+  content:'';position:absolute;right:-1px;top:50%;transform:translateY(-50%);
+  width:6px;height:6px;border-radius:50%;
+  background:var(--c-secondary);box-shadow:0 0 8px var(--c-secondary);
+}
+
+/* ─── SCREENS ─────────────────────────────────────────────── */
+.screen{display:none;flex:1;flex-direction:column;padding:28px 20px 20px;animation:screenIn var(--dur-slow) var(--ease-out) both}
+.screen.active{display:flex}
+@keyframes screenIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* ─── TYPOGRAPHY ─────────────────────────────────────────── */
+.display{font-family:var(--font-display);font-size:38px;font-weight:800;letter-spacing:-1.5px;line-height:1.1}
+.h2{font-family:var(--font-display);font-size:26px;font-weight:700;letter-spacing:-.7px;line-height:1.2}
+.h3{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-.3px}
+.subtitle{font-size:15px;color:var(--c-text-2);line-height:1.65;margin-top:10px}
+.label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--c-text-3);font-family:var(--font-display)}
+.caption{font-size:12px;color:var(--c-text-3)}
+
+/* ─── BUTTONS ─────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:56px;padding:0 24px;border:none;cursor:pointer;
+  font-family:var(--font-display);font-size:15px;font-weight:700;
+  border-radius:var(--r);position:relative;overflow:hidden;
+  transition:transform var(--dur) var(--ease),box-shadow var(--dur) var(--ease),background var(--dur);
+  -webkit-user-select:none;user-select:none;letter-spacing:-.2px;
+}
+.btn::after{content:'';position:absolute;inset:0;background:white;opacity:0;transform:scale(0);transition:transform .4s var(--ease),opacity .4s;border-radius:inherit}
+.btn:active::after{transform:scale(2.5);opacity:.07;transition-duration:0s}
+.btn:active{transform:scale(.97)}
+
+.btn-cta{
+  background:linear-gradient(135deg,var(--c-primary) 0%,#9B8BFF 100%);
+  color:white;width:100%;
+  box-shadow:0 6px 32px var(--c-primary-glow),0 2px 8px rgba(0,0,0,.3);
+  font-size:16px;min-height:60px;letter-spacing:-.3px;
+}
+.btn-cta:hover{transform:translateY(-2px) scale(1.01);box-shadow:0 12px 40px var(--c-primary-glow),0 4px 12px rgba(0,0,0,.4)}
+.btn-cta:disabled{opacity:.35;pointer-events:none;transform:none}
+.btn-cta.loading{pointer-events:none}
+.btn-cta.loading .cta-text{opacity:0}
+.btn-cta .cta-loader{position:absolute;display:none;align-items:center;gap:6px}
+.btn-cta.loading .cta-loader{display:flex}
+
+.btn-ghost{background:var(--c-surface);color:var(--c-text-2);border:1px solid var(--c-border-2);min-height:48px}
+.btn-ghost:hover{background:var(--c-surface2);color:var(--c-text)}
+.btn-sm{min-height:40px;padding:0 16px;font-size:13px}
+
+/* Loading dots */
+.ldots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:white;margin:0 2px;animation:ldot 1.2s ease-in-out infinite}
+.ldots span:nth-child(2){animation-delay:.2s}
+.ldots span:nth-child(3){animation-delay:.4s}
+@keyframes ldot{0%,60%,100%{transform:scale(.5);opacity:.3}30%{transform:scale(1);opacity:1}}
+
+/* ─── FORM ───────────────────────────────────────────────── */
+.field{display:flex;flex-direction:column;gap:7px}
+.input{
+  background:var(--c-surface);border:1.5px solid var(--c-border);
+  border-radius:var(--r);color:var(--c-text);
+  font-family:var(--font-body);font-size:15px;
+  padding:13px 15px;min-height:50px;outline:none;
+  transition:border-color var(--dur),background var(--dur);width:100%;
+}
+.input:focus{border-color:var(--c-primary);background:var(--c-surface2)}
+.input::placeholder{color:var(--c-text-3)}
+.input.err{border-color:var(--c-coral)}
+select.input{cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2355556A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:40px}
+select.input option{background:#1E1E2C}
+textarea.input{min-height:88px;resize:none;line-height:1.6}
+
+/* ─── CONVERSATIONAL STEP ────────────────────────────────── */
+.conv-step{
+  display:flex;flex-direction:column;gap:16px;
+  animation:convIn .3s var(--ease-out) both;
+}
+@keyframes convIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.conv-q{
+  font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.5px;line-height:1.3;
+}
+.conv-hint{font-size:13px;color:var(--c-text-3);margin-top:-8px}
+
+/* ─── OPTION CARDS ───────────────────────────────────────── */
+.option-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.option-card{
+  background:var(--c-surface);border:1.5px solid var(--c-border);border-radius:var(--r);
+  padding:14px;cursor:pointer;transition:all var(--dur) var(--ease);
+  display:flex;flex-direction:column;gap:6px;
+}
+.option-card:hover{border-color:var(--c-border-2);background:var(--c-surface2)}
+.option-card.selected{border-color:var(--c-primary);background:var(--c-primary-dim)}
+.option-card .oc-icon{font-size:22px}
+.option-card .oc-label{font-family:var(--font-display);font-size:13px;font-weight:600}
+.option-card .oc-sub{font-size:11px;color:var(--c-text-3)}
+
+/* ─── HABIT GROUP TABS ───────────────────────────────────── */
+.habit-tabs{display:flex;gap:6px;margin-bottom:20px;background:var(--c-surface);border-radius:var(--r);padding:4px}
+.habit-tab{
+  flex:1;padding:8px;border-radius:6px;font-family:var(--font-display);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all var(--dur);color:var(--c-text-3);text-align:center;border:none;background:transparent;
+}
+.habit-tab.active{background:var(--c-surface3);color:var(--c-text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.habit-group{display:none;flex-direction:column;gap:20px}
+.habit-group.active{display:flex;animation:convIn .25s var(--ease-out) both}
+
+/* ─── SLIDER ─────────────────────────────────────────────── */
+.slider-field{display:flex;flex-direction:column;gap:10px}
+.slider-header{display:flex;justify-content:space-between;align-items:center}
+.slider-meta{display:flex;align-items:center;gap:8px}
+.slider-emoji{font-size:18px}
+.slider-name{font-size:14px;font-weight:500}
+.slider-feedback{font-size:11px;color:var(--c-text-3);margin-top:2px;font-style:italic;min-height:14px;transition:color .2s}
+.slider-val{
+  font-size:14px;font-weight:700;font-family:var(--font-display);
+  background:var(--c-surface2);padding:2px 10px;border-radius:var(--r-pill);
+  color:var(--c-primary);min-width:30px;text-align:center;
+}
+input[type=range]{
+  -webkit-appearance:none;width:100%;height:5px;border-radius:3px;
+  background:var(--c-surface2);cursor:pointer;border:none;padding:0;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:var(--c-primary);border:2.5px solid var(--c-bg);cursor:pointer;
+  box-shadow:0 0 10px var(--c-primary-glow);transition:transform var(--dur);
+}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
+
+/* ─── CHIPS ──────────────────────────────────────────────── */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  padding:8px 15px;border-radius:var(--r-pill);
+  border:1.5px solid var(--c-border-2);background:var(--c-surface);
+  color:var(--c-text-2);font-size:13px;font-weight:500;font-family:var(--font-body);
+  cursor:pointer;transition:all var(--dur) var(--ease);min-height:36px;
+  display:flex;align-items:center;
+}
+.chip:hover{border-color:var(--c-primary);color:var(--c-text);background:var(--c-primary-dim)}
+.chip.on{border-color:var(--c-primary);background:var(--c-primary-dim);color:var(--c-primary);font-weight:600}
+
+/* ─── CARD ───────────────────────────────────────────────── */
+.card{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:18px}
+.card+.card{margin-top:10px}
+
+/* ─── BADGE ──────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:700;font-family:var(--font-display);letter-spacing:.3px}
+.badge-primary{background:var(--c-primary-dim);color:var(--c-primary)}
+.badge-gold{background:rgba(240,180,41,.12);color:var(--c-gold)}
+.badge-teal{background:rgba(45,232,200,.1);color:var(--c-secondary)}
+.badge-coral{background:rgba(255,107,107,.1);color:var(--c-coral)}
+
+/* ─── SKELETON ───────────────────────────────────────────── */
+.skeleton{background:linear-gradient(90deg,var(--c-surface) 25%,var(--c-surface2) 50%,var(--c-surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r-sm)}
+@keyframes shimmer{to{background-position:-200% 0}}
+.skel-line{height:14px;margin-bottom:9px}.skel-line.s{width:45%}.skel-line.m{width:75%}.skel-line.f{width:100%}
+.skel-block{height:80px;width:100%;margin-bottom:12px;border-radius:var(--r)}
+
+/* ─── RESULT: HERO ───────────────────────────────────────── */
+.hero-moment{
+  background:linear-gradient(135deg,rgba(124,110,250,.08) 0%,rgba(45,232,200,.06) 100%);
+  border:1px solid rgba(124,110,250,.2);
+  border-radius:var(--r-lg);padding:24px 20px;
+  text-align:center;position:relative;overflow:hidden;
+  margin-bottom:16px;
+}
+.hero-moment::before{
+  content:'';position:absolute;inset:-40%;
+  background:radial-gradient(ellipse,rgba(124,110,250,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-eyebrow{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--c-primary);margin-bottom:8px;font-family:var(--font-display)}
+.hero-title{font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:6px}
+.hero-sub{font-size:14px;color:var(--c-text-2)}
+
+/* ─── RESULT: METRICS ROW ───────────────────────────────── */
+.metrics-row{display:flex;gap:8px}
+.metric-card{
+  flex:1;background:var(--c-surface);border:1px solid var(--c-border);
+  border-radius:var(--r);padding:12px;text-align:center;
+}
+.metric-val{font-size:22px;font-weight:800;letter-spacing:-.5px;font-family:var(--font-display)}
+.metric-lbl{font-size:11px;color:var(--c-text-3);margin-top:2px}
+
+/* ─── PATH CARD ──────────────────────────────────────────── */
+.path-card{
+  background:var(--c-surface);border:1.5px solid var(--c-border);
+  border-radius:var(--r-lg);overflow:hidden;transition:border-color var(--dur);cursor:pointer;
+  margin-bottom:8px;
+}
+.path-card:hover{border-color:var(--c-border-2)}
+.path-card.expanded{border-color:var(--c-primary)}
+.path-header{display:flex;align-items:center;gap:14px;padding:16px 18px}
+.path-emoji{font-size:26px;flex-shrink:0}
+.path-info{flex:1}
+.path-name{font-family:var(--font-display);font-size:17px;font-weight:700;letter-spacing:-.3px}
+.path-sub{font-size:12px;color:var(--c-text-2);margin-top:1px}
+.path-prob{font-size:12px;font-weight:700;font-family:var(--font-display);padding:4px 10px;border-radius:var(--r-pill)}
+.path-chevron{color:var(--c-text-3);font-size:16px;transition:transform var(--dur) var(--ease);flex-shrink:0}
+.path-chevron.open{transform:rotate(90deg)}
+.path-body{max-height:0;overflow:hidden;transition:max-height .4s var(--ease-out)}
+.path-body.open{max-height:3000px}
+.path-inner{padding:0 18px 20px}
+
+/* ─── TIMELINE ───────────────────────────────────────────── */
+.timeline-item{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--c-border)}
+.timeline-item:last-child{border-bottom:none}
+.tl-dot{flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;font-family:var(--font-display);border:2px solid var(--c-border-2);color:var(--c-text-3)}
+.tl-dot.now{border-width:2px;color:white}
+.tl-content{flex:1;padding-top:5px}
+.tl-headline{font-size:14px;font-weight:600;font-family:var(--font-display);margin-bottom:3px}
+.tl-detail{font-size:12px;color:var(--c-text-2);line-height:1.5}
+
+/* ─── BAR ────────────────────────────────────────────────── */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.bar-label{font-size:11px;color:var(--c-text-2);width:68px;flex-shrink:0}
+.bar-track{flex:1;height:5px;background:var(--c-surface2);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .9s var(--ease-out)}
+.bar-num{font-size:11px;color:var(--c-text-3);width:28px;text-align:right;font-weight:700;font-family:var(--font-display)}
+
+/* ─── COMPARE GRID ───────────────────────────────────────── */
+.compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px}
+.cmp-col{background:var(--c-surface2);border:1px solid var(--c-border);border-radius:var(--r);padding:14px 10px;text-align:center}
+.cmp-col.likely{border-color:var(--c-gold);background:rgba(240,180,41,.06)}
+.cmp-icon{font-size:20px;margin-bottom:5px}
+.cmp-name{font-size:11px;font-weight:700;font-family:var(--font-display);margin-bottom:7px}
+.cmp-stat{font-size:10px;color:var(--c-text-3);margin-bottom:1px}
+.cmp-val{font-size:16px;font-weight:800;font-family:var(--font-display)}
+
+/* ─── INSIGHT CARD ───────────────────────────────────────── */
+.insight-card{
+  background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-lg);
+  overflow:hidden;margin-bottom:16px;
+}
+.insight-stripe{height:3px;background:linear-gradient(90deg,var(--c-primary),var(--c-secondary))}
+.insight-body{padding:16px}
+.insight-text{font-size:14px;color:var(--c-text-2);line-height:1.7;margin-bottom:14px}
+.insight-pills{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ─── TRUST BADGE ────────────────────────────────────────── */
+.trust-bar{
+  display:flex;align-items:center;gap:6px;
+  background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r);
+  padding:10px 14px;margin-bottom:16px;
+}
+.trust-bar-items{display:flex;gap:12px;flex-wrap:wrap;flex:1}
+.trust-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--c-text-3)}
+.trust-item span.dot{width:5px;height:5px;border-radius:50%;background:var(--c-secondary);flex-shrink:0}
+
+/* ─── CHAT ───────────────────────────────────────────────── */
+.chat-wrap{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px}
+.chat-header{padding:14px 16px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:10px}
+.chat-av-ring{
+  width:32px;height:32px;border-radius:10px;
+  background:linear-gradient(135deg,var(--c-primary),var(--c-secondary));
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
+}
+.chat-header-text{font-family:var(--font-display);font-size:13px;font-weight:700}
+.chat-header-sub{font-size:11px;color:var(--c-text-3)}
+.chat-box{padding:14px;display:flex;flex-direction:column;gap:10px;max-height:220px;overflow-y:auto;scroll-behavior:smooth}
+.chat-row{display:flex;gap:8px;align-items:flex-start}
+.chat-av{width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
+.chat-av.ai{background:var(--c-primary-dim);border:1px solid rgba(124,110,250,.3)}
+.chat-av.me{background:var(--c-surface3)}
+.chat-bubble{background:var(--c-surface2);border-radius:6px;padding:8px 11px;font-size:13px;color:var(--c-text-2);line-height:1.55;flex:1}
+.chat-bubble.ai{border-left:2px solid var(--c-primary)}
+.chat-footer{padding:10px 14px;border-top:1px solid var(--c-border);display:flex;gap:8px}
+.chat-footer .input{flex:1;min-height:44px;padding:10px 13px;font-size:13px}
+
+/* ─── SANDBOX ────────────────────────────────────────────── */
+.sandbox-card{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px}
+.sandbox-header{padding:14px 16px;border-bottom:1px solid var(--c-border)}
+.sandbox-chips{padding:14px 16px}
+
+/* ─── MODAL ──────────────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);
+  z-index:100;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity var(--dur)
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-sheet{
+  background:var(--c-surface2);border:1px solid var(--c-border-2);
+  border-radius:var(--r-lg) var(--r-lg) 0 0;width:100%;max-width:480px;margin:0 auto;
+  max-height:85vh;overflow-y:auto;
+  transform:translateY(32px);transition:transform var(--dur-slow) var(--ease);
+  padding:20px;padding-bottom:calc(24px + env(safe-area-inset-bottom));
+}
+.modal-overlay.open .modal-sheet{transform:translateY(0)}
+.modal-handle{width:36px;height:3px;border-radius:2px;background:var(--c-border-2);margin:0 auto 20px}
+.modal-q{font-size:13px;color:var(--c-text-3);font-style:italic;margin-bottom:16px}
+
+/* ─── CTA DOCK ───────────────────────────────────────────── */
+.cta-dock{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;
+  padding:14px 20px calc(18px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,var(--c-bg) 72%,transparent);
+  z-index:40;
+}
+
+/* ─── TOAST ──────────────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--c-surface3);border:1px solid var(--c-border-2);border-radius:var(--r);
+  padding:10px 18px;font-size:13px;font-weight:500;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:all var(--dur) var(--ease);z-index:90;
+  display:flex;align-items:center;gap:7px;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--c-secondary);color:var(--c-secondary)}
+.toast.error{border-color:var(--c-coral);color:var(--c-coral)}
+
+/* ─── WELCOME ────────────────────────────────────────────── */
+.hero-orb{
+  width:80px;height:80px;border-radius:24px;
+  background:linear-gradient(135deg,var(--c-primary),var(--c-secondary));
+  display:flex;align-items:center;justify-content:center;font-size:36px;
+  box-shadow:0 0 40px var(--c-primary-glow),0 0 80px rgba(45,232,200,.1);
+  margin-bottom:24px;animation:orbFloat 3s ease-in-out infinite;
+}
+@keyframes orbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.value-row{display:flex;flex-direction:column;gap:8px}
+.value-item{
+  display:flex;align-items:center;gap:12px;
+  background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r);
+  padding:13px 15px;
+}
+.vi-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0}
+.vi-text{font-size:14px;font-weight:500}
+.vi-sub{font-size:12px;color:var(--c-text-3)}
+
+.urgency-bar{
+  background:rgba(240,180,41,.06);border:1px solid rgba(240,180,41,.2);
+  border-radius:var(--r);padding:12px 15px;display:flex;gap:10px;align-items:center;margin-top:20px;
+}
+.urgency-bar .u-icon{font-size:16px;flex-shrink:0}
+.urgency-bar .u-text{font-size:13px;color:var(--c-text-2);line-height:1.5}
+.urgency-bar strong{color:var(--c-gold);font-weight:600}
+
+/* ─── UTILS ──────────────────────────────────────────────── */
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.flex-center{display:flex;align-items:center;gap:8px}
+.gap-1{height:8px}.gap-2{height:16px}.gap-3{height:24px}
+.text-primary{color:var(--c-primary)}
+.text-teal{color:var(--c-secondary)}
+.divider{border:none;border-top:1px solid var(--c-border);margin:14px 0}
+
+/* ─── ERROR ──────────────────────────────────────────────── */
+.error-state{
+  background:rgba(255,107,107,.06);border:1px solid rgba(255,107,107,.2);border-radius:var(--r-lg);
+  padding:40px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;
+}
+.success-check{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(45,232,200,.1);border:1.5px solid var(--c-secondary);font-size:18px;
+  animation:popIn .4s var(--ease) both;flex-shrink:0;
+}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--c-surface3);border-radius:2px}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-logo">
+    <div class="logo-mark">◎</div>
+    Foresight
+  </div>
+  <div class="nav-right">
+    <button class="btn-back hidden" id="btn-back" onclick="goBack()">← Back</button>
+    <div class="step-pill" id="step-pill">Welcome</div>
+  </div>
+</nav>
+
+<div class="progress-wrap">
+  <div class="progress-fill" id="progress" style="width:8%"></div>
+</div>
+
+<div class="shell">
+
+  <!-- ══════════════════════════════════
+       SCREEN 0 — WELCOME (emotional hook)
+  ══════════════════════════════════ -->
+  <div class="screen active" id="s0">
+    <div class="gap-3"></div>
+    <div class="hero-orb">◎</div>
+
+    <div class="display">Your next decision<br><span class="text-primary">could change everything.</span></div>
+    <p class="subtitle">See where your life is heading in 5 years — before you make your next move. Powered by AI, shaped by you.</p>
+
+    <div class="gap-3"></div>
+    <div class="value-row">
+      <div class="value-item">
+        <div class="vi-icon">🛤️</div>
+        <div><div class="vi-text">3 branching futures</div><div class="vi-sub">Breakthrough · Steady · Safe</div></div>
+      </div>
+      <div class="value-item">
+        <div class="vi-icon">🔬</div>
+        <div><div class="vi-text">Decision sandbox</div><div class="vi-sub">What-if simulations on demand</div></div>
+      </div>
+      <div class="value-item">
+        <div class="vi-icon">🧠</div>
+        <div><div class="vi-text">AI life coach</div><div class="vi-sub">Ask anything about your paths</div></div>
+      </div>
+    </div>
+
+    <div class="urgency-bar">
+      <span class="u-icon">⚡</span>
+      <span class="u-text">Takes <strong>2 minutes</strong>. Specific to your career, habits, and goals. <strong>Your data never leaves your device.</strong></span>
+    </div>
+    <div class="gap-3"></div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SCREEN 1 — PROFILE (conversational)
+  ══════════════════════════════════ -->
+  <div class="screen" id="s1">
+    <div class="conv-step">
+      <div class="label" style="color:var(--c-primary)">About you</div>
+      <div class="conv-q">Let's build your<br>life profile. 👤</div>
+      <p class="conv-hint">Be specific — vague inputs give vague futures.</p>
+    </div>
+    <div class="gap-2"></div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field">
+          <label class="label">Age</label>
+          <input class="input" type="number" id="f_age" value="27" min="18" max="65" placeholder="27">
+        </div>
+        <div class="field">
+          <label class="label">Industry</label>
+          <select class="input" id="f_industry">
+            <option value="technology">Technology</option>
+            <option value="finance">Finance</option>
+            <option value="healthcare">Healthcare</option>
+            <option value="marketing">Marketing</option>
+            <option value="consulting">Consulting</option>
+            <option value="entrepreneurship">Entrepreneurship</option>
+            <option value="creative">Creative / Media</option>
+            <option value="education">Education</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Current Role</label>
+        <input class="input" id="f_role" value="Software Engineer" placeholder="e.g. Product Manager">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field">
+          <label class="label">Annual Income</label>
+          <input class="input" id="f_income" value="₹12,00,000" placeholder="₹12,00,000">
+        </div>
+        <div class="field">
+          <label class="label">Location</label>
+          <input class="input" id="f_loc" value="Bengaluru" placeholder="City">
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Your situation <span style="color:var(--c-text-3);text-transform:none;letter-spacing:0;font-size:12px">— what's going on right now?</span></label>
+        <textarea class="input" id="f_situation" placeholder="Current challenges, what's working, what's not…">Mid-level software engineer at a startup. Considering a PM switch or founding my own company. 3 years XP, decent savings, feeling plateaued.</textarea>
+      </div>
+    </div>
+    <div class="gap-3"></div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SCREEN 2 — HABITS (grouped, less fatigue)
+  ══════════════════════════════════ -->
+  <div class="screen" id="s2">
+    <div class="conv-step">
+      <div class="label" style="color:var(--c-primary)">Your habits</div>
+      <div class="conv-q">These drive outcomes<br>more than decisions. 📊</div>
+      <p class="conv-hint">Rate yourself honestly — 1 is struggling, 10 is exceptional.</p>
+    </div>
+    <div class="gap-2"></div>
+
+    <div class="habit-tabs" id="habit-tabs">
+      <button class="habit-tab active" onclick="switchHabitGroup(0)" id="htab0">🧠 Mind</button>
+      <button class="habit-tab" onclick="switchHabitGroup(1)" id="htab1">💪 Body</button>
+      <button class="habit-tab" onclick="switchHabitGroup(2)" id="htab2">💰 Money</button>
+      <button class="habit-tab" onclick="switchHabitGroup(3)" id="htab3">🤝 Social</button>
+    </div>
+
+    <div id="habit-groups"></div>
+    <div class="gap-3"></div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SCREEN 3 — GOALS
+  ══════════════════════════════════ -->
+  <div class="screen" id="s3">
+    <div class="conv-step">
+      <div class="label" style="color:var(--c-primary)">What matters to you</div>
+      <div class="conv-q">What does winning<br>look like? 🎯</div>
+      <p class="conv-hint">Pick as many as feel true. Your AI coach will optimize for these.</p>
+    </div>
+    <div class="gap-2"></div>
+
+    <div class="chips" id="goal-chips">
+      <span class="chip on" onclick="toggleChip(this)">💼 Career growth</span>
+      <span class="chip" onclick="toggleChip(this)">💰 Wealth</span>
+      <span class="chip" onclick="toggleChip(this)">🚀 Start a company</span>
+      <span class="chip" onclick="toggleChip(this)">🌍 Travel</span>
+      <span class="chip" onclick="toggleChip(this)">❤️ Relationships</span>
+      <span class="chip" onclick="toggleChip(this)">🧘 Health</span>
+      <span class="chip" onclick="toggleChip(this)">📚 Deep expertise</span>
+      <span class="chip" onclick="toggleChip(this)">🏡 Property</span>
+      <span class="chip" onclick="toggleChip(this)">⚖️ Work-life balance</span>
+      <span class="chip" onclick="toggleChip(this)">🎨 Creative work</span>
+    </div>
+
+    <div class="gap-3"></div>
+    <div class="field">
+      <label class="label">Decision you're wrestling with <span style="color:var(--c-text-3);text-transform:none;letter-spacing:0;font-size:12px">optional</span></label>
+      <textarea class="input" id="f_decision" placeholder="e.g. Switch companies? Start a side project? Move abroad?">Deciding between joining a FAANG company vs staying at the startup vs starting something of my own.</textarea>
+    </div>
+    <div class="gap-3"></div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SCREEN 4 — RESULTS
+  ══════════════════════════════════ -->
+  <div class="screen" id="s4">
+
+    <!-- LOADING STATE -->
+    <div id="result-skeleton">
+      <div style="text-align:center;padding:40px 0 20px">
+        <div style="font-size:40px;animation:orbFloat 2s ease-in-out infinite;display:inline-block">◎</div>
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-top:14px">Simulating your futures…</div>
+        <div style="font-size:13px;color:var(--c-text-3);margin-top:6px" id="loading-msg">Analysing your profile</div>
+      </div>
+      <div class="skeleton skel-line m"></div>
+      <div class="skeleton skel-line f"></div>
+      <div class="gap-1"></div>
+      <div style="display:flex;gap:8px">
+        <div class="skeleton" style="flex:1;height:70px;border-radius:10px"></div>
+        <div class="skeleton" style="flex:1;height:70px;border-radius:10px"></div>
+        <div class="skeleton" style="flex:1;height:70px;border-radius:10px"></div>
+      </div>
+      <div class="gap-1"></div>
+      <div class="skeleton skel-block"></div>
+      <div class="skeleton skel-block"></div>
+      <div class="skeleton skel-block"></div>
+    </div>
+
+    <div id="result-content" style="display:none"></div>
+
+    <div id="result-error" style="display:none">
+      <div class="gap-2"></div>
+      <div class="error-state">
+        <div style="font-size:40px">⚠️</div>
+        <div class="h3" style="color:var(--c-coral)">Simulation failed</div>
+        <p style="font-size:13px;color:var(--c-text-2);line-height:1.6" id="err-msg">Something went wrong.</p>
+        <button class="btn btn-ghost btn-sm" onclick="retrySimulation()" style="margin-top:6px">↺ Try again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA DOCK -->
+<div class="cta-dock" id="cta-dock">
+  <button class="btn btn-cta" id="cta-btn" onclick="ctaAction()">
+    <span class="cta-text" id="cta-label">Reveal My Future 🔮</span>
+    <span class="cta-loader"><span class="ldots"><span></span><span></span><span></span></span></span>
+  </button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="flex-between" style="margin-bottom:10px">
+      <div class="h3" id="modal-title">What-If Scenario</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal(true)" style="min-height:34px;padding:0 12px">✕ Close</button>
+    </div>
+    <div class="modal-q" id="modal-q"></div>
+    <div id="modal-body">
+      <div class="skeleton skel-line f"></div>
+      <div class="skeleton skel-line m"></div>
+      <div class="skeleton skel-line f"></div>
+      <div class="skeleton skel-line s"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
+
+<script>
+/* ── STATE ── */
+let step = 0;
+let simData = null;
+let chatHistory = [];
+let lastProfile = null;
+let activeHabitGroup = 0;
+
+/* ── HABIT CONFIG (grouped) ── */
+const HABIT_GROUPS = [
+  { id:'mind', label:'🧠 Mind', items:[
+    {id:'learning', icon:'📚', label:'Daily learning', default:7, feedbacks:['Rarely pick up new skills','Occasional reading/courses','Solid learning routine','Consistently levelling up','Top 5% learner — outstanding']},
+    {id:'focus', icon:'🎯', label:'Deep focus', default:7, feedbacks:['Constantly distracted','Some focused blocks','Decent concentration','Strong focus practice','Flow state daily — elite']},
+    {id:'stress', icon:'🧘', label:'Stress management', default:4, feedbacks:['Frequently overwhelmed','Sometimes coping','Managing reasonably','Good resilience','Exceptional mental clarity']},
+  ]},
+  { id:'body', label:'💪 Body', items:[
+    {id:'sleep', icon:'😴', label:'Sleep quality', default:6, feedbacks:['Chronically sleep-deprived','Irregular, often tired','Decent but inconsistent','Solid sleep hygiene','Optimised recovery — elite']},
+    {id:'fitness', icon:'🏃', label:'Physical fitness', default:5, feedbacks:['Mostly sedentary','Light occasional activity','Regular movement','Strong training habit','Athletic discipline — elite']},
+  ]},
+  { id:'money', label:'💰 Money', items:[
+    {id:'finance', icon:'💰', label:'Financial discipline', default:6, feedbacks:['Spending beyond means','Occasional savings','Tracking expenses','Consistent investing','Wealth-building machine']},
+  ]},
+  { id:'social', label:'🤝 Social', items:[
+    {id:'network', icon:'🤝', label:'Networking', default:5, feedbacks:['Isolated, no networking','Occasional connections','Active social effort','Strong professional web','Industry connector — elite']},
+    {id:'social_q', icon:'❤️', label:'Relationships', default:7, feedbacks:['Neglecting connections','Some quality time','Decent social life','Strong relationships','Deep, nourishing connections']},
+  ]},
+];
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  buildHabitGroups();
+  updateNav();
+  animateLoadingMessages();
+});
+
+function buildHabitGroups() {
+  const container = document.getElementById('habit-groups');
+  container.innerHTML = HABIT_GROUPS.map((g, gi) => `
+    <div class="habit-group${gi===0?' active':''}" id="hg${gi}">
+      ${g.items.map(h => `
+        <div class="slider-field">
+          <div class="slider-header">
+            <div class="slider-meta">
+              <span class="slider-emoji">${h.icon}</span>
+              <span class="slider-name">${h.label}</span>
+            </div>
+            <span class="slider-val" id="hv_${h.id}">${h.default}</span>
+          </div>
+          <input type="range" min="1" max="10" value="${h.default}" step="1"
+                 id="hs_${h.id}" oninput="updateHabit('${h.id}',this.value,${gi},'${h.id}')">
+          <div class="slider-feedback" id="hf_${h.id}">${h.feedbacks[Math.floor((h.default-1)/2)]||''}</div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+  // init fills
+  setTimeout(()=>{
+    HABIT_GROUPS.forEach(g=>g.items.forEach(h=>updateHabit(h.id,h.default,0,h.id)));
+  },100);
+}
+
+function switchHabitGroup(idx) {
+  document.querySelectorAll('.habit-group').forEach((g,i)=>{
+    g.classList.toggle('active',i===idx);
+  });
+  document.querySelectorAll('.habit-tab').forEach((t,i)=>{
+    t.classList.toggle('active',i===idx);
+  });
+  activeHabitGroup=idx;
+}
+
+function updateHabit(id, val, gi, hid) {
+  document.getElementById('hv_'+id).textContent = val;
+  const track = document.getElementById('hs_'+id);
+  const pct = ((val-1)/9)*100;
+  track.style.background=`linear-gradient(to right,var(--c-primary) ${pct}%,var(--c-surface2) ${pct}%)`;
+  // feedback
+  const group = HABIT_GROUPS.flatMap(g=>g.items).find(h=>h.id===id);
+  if(group) {
+    const fi = Math.min(Math.floor((val-1)/2), group.feedbacks.length-1);
+    const fb = document.getElementById('hf_'+id);
+    if(fb) {
+      fb.textContent = group.feedbacks[fi];
+      const v = parseInt(val);
+      fb.style.color = v>=8?'var(--c-secondary)':v<=3?'var(--c-coral)':'var(--c-text-3)';
+    }
+  }
+}
+
+/* ── NAV ── */
+const CTA = ['Reveal My Future 🔮','Continue →','Continue →','Run My Life Simulation →',''];
+const STEPS = ['Welcome','Profile','Habits','Goals','Results'];
+
+function updateNav() {
+  document.getElementById('progress').style.width = (step===0?8:((step)/(4))*100)+'%';
+  document.getElementById('step-pill').textContent = STEPS[step]||'Results';
+  document.getElementById('cta-label').textContent = CTA[step]||'';
+  document.getElementById('cta-dock').style.display = step===4?'none':'block';
+  const back = document.getElementById('btn-back');
+  if(step>0&&step<4){back.classList.remove('hidden')}else{back.classList.add('hidden')}
+  document.getElementById('cta-btn').classList.remove('loading');
+  document.getElementById('cta-btn').disabled=false;
+}
+
+function showScreen(n) {
+  document.querySelectorAll('.screen').forEach((s,i)=>{
+    s.classList.remove('active');
+    if(i===n){s.style.display='flex';s.classList.add('active')}
+    else s.style.display='none';
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+  step=n;updateNav();
+}
+
+function ctaAction() {
+  if(step===0) showScreen(1);
+  else if(step===1){if(validateProfile())showScreen(2)}
+  else if(step===2) showScreen(3);
+  else if(step===3) startSimulation();
+}
+
+function goBack() {
+  if(step>0&&step<4) showScreen(step-1);
+}
+
+/* ── VALIDATION ── */
+function validateProfile() {
+  const role=document.getElementById('f_role').value.trim();
+  const age=parseInt(document.getElementById('f_age').value);
+  if(!role){showToast('Enter your current role','error');document.getElementById('f_role').classList.add('err');return false}
+  if(isNaN(age)||age<16||age>80){showToast('Enter a valid age','error');return false}
+  document.getElementById('f_role').classList.remove('err');
+  return true;
+}
+
+/* ── COLLECT ── */
+function collectData() {
+  const habits={};
+  HABIT_GROUPS.forEach(g=>g.items.forEach(h=>{
+    const el=document.getElementById('hs_'+h.id);
+    if(el) habits[h.id]=el.value;
+  }));
+  return {
+    age: document.getElementById('f_age').value,
+    role: document.getElementById('f_role').value,
+    industry: document.getElementById('f_industry').value,
+    income: document.getElementById('f_income').value,
+    location: document.getElementById('f_loc').value,
+    situation: document.getElementById('f_situation').value,
+    habits,
+    goals: [...document.querySelectorAll('#goal-chips .chip.on')].map(c=>c.textContent.trim()),
+    decision: document.getElementById('f_decision').value
+  };
+}
+
+/* ── LOADING MESSAGES ── */
+const LOADING_MSGS = [
+  'Analysing your profile…',
+  'Modelling career trajectories…',
+  'Calculating wealth outcomes…',
+  'Weighing your habits against patterns…',
+  'Generating your 3 futures…',
+  'Interesting… this changes things.',
+  'Almost there — finalising insights…'
+];
+let loadMsgIdx=0,loadMsgTimer;
+function animateLoadingMessages() {
+  const el=document.getElementById('loading-msg');
+  if(!el) return;
+  clearInterval(loadMsgTimer);
+  loadMsgTimer=setInterval(()=>{
+    loadMsgIdx=(loadMsgIdx+1)%LOADING_MSGS.length;
+    if(el) el.style.opacity=0;
+    setTimeout(()=>{if(el){el.textContent=LOADING_MSGS[loadMsgIdx];el.style.opacity=1}},200);
+  },2000);
+}
+
+/* ── SIMULATION ── */
+async function startSimulation() {
+  const btn=document.getElementById('cta-btn');
+  btn.classList.add('loading');btn.disabled=true;
+
+  showScreen(4);
+  document.getElementById('result-skeleton').style.display='block';
+  document.getElementById('result-content').style.display='none';
+  document.getElementById('result-error').style.display='none';
+  animateLoadingMessages();
+
+  lastProfile=collectData();
+  await runSim(lastProfile);
+}
+
+async function retrySimulation() {
+  document.getElementById('result-skeleton').style.display='block';
+  document.getElementById('result-content').style.display='none';
+  document.getElementById('result-error').style.display='none';
+  animateLoadingMessages();
+  await runSim(lastProfile);
+}
+
+async function runSim(p) {
+  const SYS=`You are Foresight AI. Respond ONLY with valid JSON. No markdown. No preamble.
+Return exactly:
+{
+  "heroTitle":"Punchy 5-8 word statement about this person's most likely future identity",
+  "heroSub":"One line: what life looks like in 5 years on the realistic path",
+  "futures":[
+    {
+      "id":"optimistic","name":"Breakthrough Path","icon":"🚀","tagline":"short vision",
+      "probability":22,"color":"#2DE8C8",
+      "year1":{"headline":"...","career":"...","wealth":"...","health":"..."},
+      "year3":{"headline":"...","career":"...","wealth":"...","health":"..."},
+      "year5":{"headline":"...","career":"...","wealth":"...","health":"..."},
+      "metrics":{"incomeMultiplier":3.2,"wealthScore":82,"healthScore":78,"fulfillmentScore":88},
+      "narrative":"2-3 sentence story about this path, with personality",
+      "keyDecisions":["...","...","..."],
+      "risks":["...","..."],
+      "habitImpact":{"learning":95,"focus":88,"sleep":78,"fitness":70,"finance":85,"network":80}
+    },
+    {"id":"realistic","name":"Steady Growth","icon":"📈","probability":55,"color":"#7C6EFA","tagline":"...","year1":{"headline":"","career":"","wealth":"","health":""},"year3":{"headline":"","career":"","wealth":"","health":""},"year5":{"headline":"","career":"","wealth":"","health":""},"metrics":{"incomeMultiplier":2,"wealthScore":65,"healthScore":68,"fulfillmentScore":72},"narrative":"...","keyDecisions":["","",""],"risks":["",""],"habitImpact":{"learning":70,"focus":65,"sleep":60,"fitness":55,"finance":68,"network":60}},
+    {"id":"conservative","name":"Safe Harbor","icon":"⚓","probability":23,"color":"#F0B429","tagline":"...","year1":{"headline":"","career":"","wealth":"","health":""},"year3":{"headline":"","career":"","wealth":"","health":""},"year5":{"headline":"","career":"","wealth":"","health":""},"metrics":{"incomeMultiplier":1.4,"wealthScore":48,"healthScore":60,"fulfillmentScore":55},"narrative":"...","keyDecisions":["","",""],"risks":["",""],"habitImpact":{"learning":50,"focus":45,"sleep":55,"fitness":42,"finance":52,"network":40}}
+  ],
+  "insight":"2-3 sentence synthesis. Honest, specific, slightly provocative — mention their actual situation.",
+  "topHabit":"single best habit they should change, and why in one sentence",
+  "criticalDecision":"the most important choice facing them right now, phrased as a genuine insight"
+}`;
+
+  const USR=`Profile: ${p.age}yr ${p.role} (${p.industry}), income ${p.income}, ${p.location}.
+Situation: ${p.situation}
+Habits (1-10): ${Object.entries(p.habits).map(([k,v])=>k+':'+v).join(', ')}
+Goals: ${p.goals.join(', ')}
+Decision: ${p.decision}
+Generate realistic, specific, highly personalized simulations with concrete income figures and titles relevant to ${p.location}. Add personality and honest challenge to the narrative.`;
+
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:3500,
+        system:SYS,
+        messages:[{role:'user',content:USR}]
+      })
+    });
+    const d=await res.json();
+    let raw=(d.content?.[0]?.text||'').replace(/```json|```/g,'').trim();
+    simData=JSON.parse(raw);
+    simData._p=p;
+    clearInterval(loadMsgTimer);
+    renderResults(simData);
+    document.getElementById('result-skeleton').style.display='none';
+    document.getElementById('result-content').style.display='block';
+    showToast('Your futures are ready ✨','success');
+  } catch(e) {
+    clearInterval(loadMsgTimer);
+    document.getElementById('result-skeleton').style.display='none';
+    document.getElementById('result-error').style.display='block';
+    document.getElementById('err-msg').textContent=e.message||'Unknown error.';
+  }
+}
+
+/* ── RENDER ── */
+function renderResults(d) {
+  const rc=document.getElementById('result-content');
+  const p=d._p;
+
+  const heroHTML=`
+    <div class="hero-moment">
+      <div class="hero-eyebrow">Your simulation is complete</div>
+      <div class="hero-title">${d.heroTitle||'Your future is being written.'}</div>
+      <div class="hero-sub">${d.heroSub||'3 paths. Real outcomes. Your call.'}</div>
+    </div>
+  `;
+
+  const compareHTML=`
+    <div class="compare-grid">
+      ${d.futures.map((f,i)=>`
+        <div class="cmp-col${i===1?' likely':''}">
+          ${i===1?`<div class="badge badge-gold" style="margin-bottom:6px;font-size:10px">Most likely</div>`:'<div style="height:22px"></div>'}
+          <div class="cmp-icon">${f.icon}</div>
+          <div class="cmp-name" style="color:${f.color}">${f.name.split(' ')[0]}</div>
+          <div class="cmp-stat">Probability</div>
+          <div class="cmp-val" style="color:${f.color}">${f.probability}%</div>
+          <div style="height:5px"></div>
+          <div class="cmp-stat">Income ×</div>
+          <div class="cmp-val">${f.metrics.incomeMultiplier}×</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const insightHTML=`
+    <div class="insight-card">
+      <div class="insight-stripe"></div>
+      <div class="insight-body">
+        <div class="label" style="margin-bottom:8px;color:var(--c-primary)">AI Insight — just for you</div>
+        <p class="insight-text">${d.insight}</p>
+        <div class="insight-pills">
+          <div>
+            <div class="label" style="color:var(--c-secondary);margin-bottom:5px">Fix this first</div>
+            <div style="font-size:13px;color:var(--c-text-2)">${d.topHabit}</div>
+          </div>
+          <div class="divider" style="margin:10px 0"></div>
+          <div>
+            <div class="label" style="color:var(--c-coral);margin-bottom:5px">Your critical decision</div>
+            <div style="font-size:13px;color:var(--c-text-2)">${d.criticalDecision}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const trustHTML=`
+    <div class="trust-bar">
+      <div class="trust-bar-items">
+        <div class="trust-item"><span class="dot"></span>AI estimate, not a guarantee</div>
+        <div class="trust-item"><span class="dot"></span>Based on habit & career patterns</div>
+        <div class="trust-item"><span class="dot"></span>Data stays on your device</div>
+      </div>
+    </div>
+  `;
+
+  const pathsHTML=d.futures.map((f,idx)=>{
+    const habitBars=Object.entries(f.habitImpact).map(([k,v])=>`
+      <div class="bar-row">
+        <div class="bar-label">${k}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${v}%;background:${f.color}"></div></div>
+        <div class="bar-num">${v}</div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="path-card" id="pc${idx}">
+        <div class="path-header" onclick="togglePath(${idx})">
+          <div class="path-emoji">${f.icon}</div>
+          <div class="path-info">
+            <div class="path-name">${f.name}</div>
+            <div class="path-sub">${f.tagline}</div>
+          </div>
+          <div class="path-prob" style="background:${f.color}18;color:${f.color}">${f.probability}%</div>
+          <div class="path-chevron" id="chv${idx}">›</div>
+        </div>
+        <div class="path-body" id="pb${idx}">
+          <div class="path-inner">
+            <div class="metrics-row" style="margin-bottom:20px">
+              <div class="metric-card">
+                <div class="metric-val" style="color:${f.color}">${f.metrics.incomeMultiplier}×</div>
+                <div class="metric-lbl">Income</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-val" style="color:${f.color}">${f.metrics.wealthScore}</div>
+                <div class="metric-lbl">Wealth /100</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-val" style="color:${f.color}">${f.metrics.fulfillmentScore}</div>
+                <div class="metric-lbl">Fulfillment</div>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="tl-dot now" style="background:${f.color};border-color:${f.color}">Y1</div>
+              <div class="tl-content">
+                <div class="tl-headline">${f.year1.headline}</div>
+                <div class="tl-detail">${f.year1.career} · ${f.year1.wealth}</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="tl-dot" style="border-color:${f.color}66">Y3</div>
+              <div class="tl-content">
+                <div class="tl-headline">${f.year3.headline}</div>
+                <div class="tl-detail">${f.year3.career} · ${f.year3.wealth}</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="tl-dot" style="border-color:${f.color}33">Y5</div>
+              <div class="tl-content">
+                <div class="tl-headline">${f.year5.headline}</div>
+                <div class="tl-detail">${f.year5.career} · ${f.year5.wealth}</div>
+              </div>
+            </div>
+
+            <div style="height:16px"></div>
+            <p style="font-size:13px;color:var(--c-text-2);line-height:1.7;margin-bottom:16px">${f.narrative}</p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+              <div>
+                <div class="label" style="color:var(--c-secondary);margin-bottom:7px">Key decisions</div>
+                ${f.keyDecisions.map(kd=>`<div style="font-size:12px;color:var(--c-text-2);padding:5px 0;border-bottom:1px solid var(--c-border)">· ${kd}</div>`).join('')}
+              </div>
+              <div>
+                <div class="label" style="color:var(--c-coral);margin-bottom:7px">Risks</div>
+                ${f.risks.map(r=>`<div style="font-size:12px;color:var(--c-text-2);padding:5px 0;border-bottom:1px solid var(--c-border)">· ${r}</div>`).join('')}
+              </div>
+            </div>
+
+            <div class="label" style="margin-bottom:10px">Habit impact on this path</div>
+            ${habitBars}
+
+            <div style="height:14px"></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openScenario('Give me a concrete 90-day action plan to achieve the ${f.name}. Be specific.')">90-day plan ↗</button>
+              <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openScenario('What are the real obstacles to the ${f.name} and exactly how do I overcome each one?')">Obstacles ↗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const sandboxHTML=`
+    <div class="sandbox-card">
+      <div class="sandbox-header">
+        <div class="label" style="color:var(--c-primary)">🔬 Decision Sandbox</div>
+        <div style="font-size:12px;color:var(--c-text-3);margin-top:3px">Tap any scenario to simulate it instantly</div>
+      </div>
+      <div class="sandbox-chips">
+        <div class="chips">
+          <span class="chip" onclick="openScenario('What if I switch to a FAANG company right now? Honest analysis.')">Switch to big tech</span>
+          <span class="chip" onclick="openScenario('What if I launch my own startup in the next 6 months?')">Launch a startup</span>
+          <span class="chip" onclick="openScenario('What if I relocate abroad for work? Where should I go?')">Relocate abroad</span>
+          <span class="chip" onclick="openScenario('What if I pursue an MBA? ROI analysis for my situation.')">Get an MBA</span>
+          <span class="chip" onclick="openScenario('What if I radically improved my sleep and fitness over the next 6 months?')">Optimize health</span>
+          <span class="chip" onclick="openScenario('What if I invested 30% of my income starting from today?')">Invest 30%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-wrap">
+      <div class="chat-header">
+        <div class="chat-av-ring">🧠</div>
+        <div>
+          <div class="chat-header-text">Your AI Life Coach</div>
+          <div class="chat-header-sub">Knows your full profile & all 3 paths</div>
+        </div>
+      </div>
+      <div class="chat-box" id="chat-box">
+        <div class="chat-row">
+          <div class="chat-av ai">🧠</div>
+          <div class="chat-bubble ai">Interesting profile. I've analysed your 3 futures in detail. What do you want to know?</div>
+        </div>
+      </div>
+      <div class="chat-footer">
+        <input class="input" id="chat-in" placeholder="Ask about any path…" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn btn-ghost" style="min-height:44px;padding:0 14px;flex-shrink:0" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" style="width:100%;font-size:13px" onclick="showScreen(1)">← Edit my profile & re-run</button>
+    <div style="height:16px"></div>
+  `;
+
+  rc.innerHTML=`
+    ${heroHTML}
+    <div class="flex-between" style="margin-bottom:14px">
+      <div class="h3">Your 3 Futures</div>
+      <div class="success-check">✓</div>
+    </div>
+    ${compareHTML}
+    ${insightHTML}
+    ${trustHTML}
+    ${pathsHTML}
+    ${sandboxHTML}
+  `;
+
+  setTimeout(()=>togglePath(1),500);
+}
+
+/* ── PATH ACCORDION ── */
+function togglePath(idx) {
+  const body=document.getElementById('pb'+idx);
+  const chv=document.getElementById('chv'+idx);
+  const card=document.getElementById('pc'+idx);
+  const isOpen=body.classList.contains('open');
+  document.querySelectorAll('.path-body').forEach(b=>b.classList.remove('open'));
+  document.querySelectorAll('.path-chevron').forEach(c=>c.classList.remove('open'));
+  document.querySelectorAll('.path-card').forEach(c=>c.classList.remove('expanded'));
+  if(!isOpen){body.classList.add('open');chv.classList.add('open');card.classList.add('expanded')}
+}
+
+/* ── SCENARIO MODAL ── */
+async function openScenario(q) {
+  if(!simData) return;
+  document.getElementById('modal-q').textContent=`"${q}"`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="skeleton skel-line f"></div>
+    <div class="skeleton skel-line m"></div>
+    <div class="skeleton skel-line f"></div>
+    <div class="skeleton skel-line s"></div>
+  `;
+  document.getElementById('modal').classList.add('open');
+  const p=simData._p;
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:700,
+        messages:[{role:'user',content:`You are Foresight AI. User: ${p.age}yr ${p.role} in ${p.location}, ${p.income}. Paths: ${simData.futures.map(f=>f.name+' '+f.probability+'%').join(', ')}. Scenario: "${q}". Give an honest, specific, personality-forward analysis in 3-4 paragraphs. No bullet points. Use phrases like "This path is risky, but powerful" or "Interesting — this changes things." Be a real advisor, not just information.`}]
+      })
+    });
+    const data=await res.json();
+    const txt=data.content?.[0]?.text||'No response.';
+    document.getElementById('modal-body').innerHTML=txt.split('\n\n').filter(Boolean)
+      .map(t=>`<p style="font-size:13px;color:var(--c-text-2);line-height:1.7;margin-bottom:14px">${t}</p>`).join('');
+  } catch(e) {
+    document.getElementById('modal-body').innerHTML=`<p style="color:var(--c-coral);font-size:13px">${e.message}</p>`;
+  }
+}
+
+function closeModal(e) {
+  if(e===true||e.target===document.getElementById('modal'))
+    document.getElementById('modal').classList.remove('open');
+}
+
+/* ── CHAT ── */
+async function sendChat() {
+  const inp=document.getElementById('chat-in');
+  const msg=inp.value.trim();
+  if(!msg||!simData) return;
+  inp.value='';
+  const box=document.getElementById('chat-box');
+  box.insertAdjacentHTML('beforeend',`
+    <div class="chat-row">
+      <div class="chat-av me">👤</div>
+      <div class="chat-bubble">${msg}</div>
+    </div>`);
+  const lid='cl'+Date.now();
+  box.insertAdjacentHTML('beforeend',`
+    <div class="chat-row" id="${lid}">
+      <div class="chat-av ai">🧠</div>
+      <div class="chat-bubble ai" style="color:var(--c-text-3)">Thinking…</div>
+    </div>`);
+  box.scrollTop=box.scrollHeight;
+  chatHistory.push({role:'user',content:msg});
+  const p=simData._p;
+  const SYS=`Foresight AI. User: ${p.age}yr ${p.role} in ${p.location}. Paths: ${simData.futures.map(f=>f.name+' ('+f.probability+'%)').join('; ')}. Insight: ${simData.insight}. Be concise (2-3 sentences), specific, a little provocative — like a great advisor. Say things like "Honestly, the real issue is..." or "This path is risky, but..." Don't just summarize. Challenge and guide.`;
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:350,system:SYS,messages:chatHistory})
+    });
+    const data=await res.json();
+    const reply=data.content?.[0]?.text||'No response.';
+    chatHistory.push({role:'assistant',content:reply});
+    document.getElementById(lid).querySelector('.chat-bubble').textContent=reply;
+  } catch(e) {
+    document.getElementById(lid).querySelector('.chat-bubble').textContent='Error: '+e.message;
+  }
+  box.scrollTop=box.scrollHeight;
+}
+
+/* ── UTILS ── */
+function toggleChip(el){el.classList.toggle('on')}
+
+let toastTimer;
+function showToast(msg,type='info') {
+  const t=document.getElementById('toast');
+  const icons={success:'✦',error:'✕',info:'·'};
+  document.getElementById('toast-icon').textContent=icons[type]||'·';
+  document.getElementById('toast-msg').textContent=msg;
+  t.className='toast '+type+' show';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
